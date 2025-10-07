@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>僵屍狩獵：八人困境</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="login-overlay" class="overlay">
+      <div class="overlay-panel board-card">
+        <h1>僵屍狩獵：八人困境</h1>
+        <p class="lead">登入桌遊大廳，與好友或機器人展開 12 回合的極限推理之戰。</p>
+        <form id="auth-form" class="auth-form">
+          <label>帳號
+            <input type="text" id="auth-username" placeholder="輸入帳號" autocomplete="username" required>
+          </label>
+          <label>密碼
+            <input type="password" id="auth-password" placeholder="輸入密碼" autocomplete="current-password" required>
+          </label>
+          <label>顯示名稱（可選）
+            <input type="text" id="auth-display" placeholder="在房間中顯示的名字">
+          </label>
+          <div class="form-actions inline">
+            <button type="submit" id="btn-auth-submit">登入</button>
+            <button type="button" id="btn-auth-toggle">切換至註冊</button>
+          </div>
+          <p class="hint" id="auth-hint">還沒有帳號？立即註冊一個。</p>
+        </form>
+      </div>
+    </div>
+
+    <div id="lobby-view" class="view hidden">
+      <header class="top-bar">
+        <div class="top-bar-section">
+          <strong>玩家：</strong><span id="current-player-name">-</span>
+        </div>
+        <div class="top-bar-section actions">
+          <button id="btn-refresh-lobby">刷新房間</button>
+        </div>
+      </header>
+      <main class="lobby-layout">
+        <section class="panel wide">
+          <div class="panel-header">
+            <h2>遊戲大廳</h2>
+            <span class="badge" id="room-count">0 間房間</span>
+          </div>
+          <div id="room-list" class="room-grid"></div>
+        </section>
+        <section class="panel narrow">
+          <h2>建立新房間</h2>
+          <form id="create-room-form" class="form-block">
+            <label>房間名稱
+              <input type="text" id="create-room-name" placeholder="失落的避難所">
+            </label>
+            <button type="submit">建立房間</button>
+          </form>
+          <div class="panel-divider"></div>
+          <div class="hint">
+            <p>房主可以新增或移除機器人，並透過邀請連結召集夥伴。</p>
+            <p>回到大廳可自由切換其他房間。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="room-view" class="view hidden">
+      <header class="top-bar">
+        <div class="top-bar-section">
+          <strong>房間：</strong><span id="room-title">-</span>
+          <span class="badge" id="room-status-badge">待機中</span>
+        </div>
+        <div class="top-bar-section actions">
+          <button id="btn-copy-invite">複製邀請連結</button>
+          <button id="btn-leave-room">返回大廳</button>
+        </div>
+      </header>
+      <main class="room-layout">
+        <section class="panel wide">
+          <div class="panel-header">
+            <h2>座位配置</h2>
+            <span class="subtext" id="host-indicator">房主：-</span>
+          </div>
+          <div id="seat-grid" class="seat-grid"></div>
+        </section>
+        <section class="panel narrow" id="host-controls">
+          <h2>房主控制</h2>
+          <p class="hint" id="host-only-hint">僅房主可操作</p>
+          <form id="add-bot-form" class="form-block">
+            <label>機器人名稱
+              <input type="text" id="bot-name" placeholder="機器人">
+            </label>
+            <button type="submit">新增機器人</button>
+          </form>
+          <div class="form-block">
+            <label>移除機器人
+              <select id="bot-seat-select"></select>
+            </label>
+            <button type="button" id="btn-remove-bot">移除</button>
+          </div>
+          <button type="button" id="btn-start-game">開始遊戲（補齊機器人）</button>
+        </section>
+      </main>
+    </div>
+
+    <div id="game-view" class="view hidden">
+      <header class="top-bar">
+        <div class="top-bar-section">
+          <strong>房間：</strong><span id="game-room-name">-</span>
+          <strong>座位：</strong><span id="game-seat-index">-</span>
+        </div>
+        <div class="top-bar-section">
+          <strong>回合：</strong><span id="info-round">-</span> / <span id="max-rounds">12</span>
+          <strong>輪到：</strong><span id="info-turn">-</span>
+        </div>
+        <div class="top-bar-section actions">
+          <button id="btn-leave-game">結束並返回大廳</button>
+        </div>
+      </header>
+      <main class="game-layout">
+        <section class="panel board-panel">
+          <div class="panel-header">
+            <h2>戰局桌面</h2>
+            <div id="faction-summary" class="faction-summary">等待房主開始對戰</div>
+          </div>
+          <div id="board-seats" class="board-ring"></div>
+          <div id="turn-banner" class="turn-banner hidden">輪到你行動</div>
+        </section>
+        <section class="panel player-panel">
+          <h2>我的情報</h2>
+          <div class="identity-card" id="identity-display">身份：未知</div>
+          <div class="hand-section">
+            <div class="hand-header">
+              <h3>手牌</h3>
+              <span class="hint" id="hand-hint">點擊手牌以選取，多選上限 5 張</span>
+            </div>
+            <div id="hand-cards" class="card-row"></div>
+          </div>
+          <div class="selected-block">
+            <h3>已選卡牌</h3>
+            <div id="selected-cards" class="card-row compact"></div>
+          </div>
+        </section>
+        <section class="panel controls-panel">
+          <h2>挑戰操作</h2>
+          <div class="controls-body">
+            <p class="hint">先選擇手牌，再挑戰一名存活玩家。僵屍牌必勝並感染；獵槍僅對僵屍有效。</p>
+            <div id="target-list" class="target-grid"></div>
+            <button id="btn-submit-challenge" class="primary" disabled>發起挑戰</button>
+            <button id="btn-clear-selection" class="ghost">清除選取</button>
+          </div>
+        </section>
+        <section class="panel log-panel">
+          <h2>戰況紀錄</h2>
+          <ul id="logs-list"></ul>
+        </section>
+        <section class="panel tutorial-panel">
+          <h2>新手教程</h2>
+          <div class="tutorial-content">
+            <h3>挑戰流程</h3>
+            <ol class="tutorial-steps">
+              <li>檢查輪到誰行動，僅輪到自己時才能發起挑戰。</li>
+              <li>點擊手牌選擇要出的牌，數字牌必須為同花色且最多五張。</li>
+              <li>在右側挑選一名存活玩家作為目標，再按下「發起挑戰」。</li>
+            </ol>
+            <h3>牌面效用</h3>
+            <ul class="tutorial-list">
+              <li><strong>僵屍牌</strong>：僵屍必勝並感染對手，感染後自動獲得僵屍牌。</li>
+              <li><strong>獵槍牌</strong>：只能淘汰僵屍，若對人類使用會失敗。</li>
+              <li><strong>疫苗牌</strong>：僅限防守使用，可將攻擊者強制轉回人類。</li>
+            </ul>
+            <h3>勝負條件</h3>
+            <p class="tutorial-tip">任何一方全滅或 12 回合結束即判定勝負，人類需存活人數大於或等於僵屍數量。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="defense-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="defense-title">防守選擇</h3>
+        <p id="defense-description"></p>
+        <div id="defense-options" class="defense-options"></div>
+        <div class="modal-actions">
+          <button id="btn-defense-confirm">確認出牌</button>
+          <button id="btn-defense-pass" class="ghost">棄權</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>
