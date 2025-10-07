@@ -1,6 +1,6 @@
 # 僵屍狩獵（ZombiesRush）
 
-《僵屍狩獵》是一款以 Go 後端搭配原生 Web 前端的多人桌遊模擬專案。系統透過 WebSocket 提供即時房間與對戰同步，並以 SQLite 儲存玩家帳號與會話資料，適合研究推理桌遊的線上化流程與即時互動架構。
+a game from alice in borderland
 
 ## 核心特色
 
